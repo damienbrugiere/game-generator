@@ -1,11 +1,17 @@
 import map.Map;
 import map.MapGenerator;
 
+import java.util.Scanner;
+
 public class Main {
 
-    public static void main(String[] args) {
-        Map map = MapGenerator.builder().withHeight(100).withWidth(100).generate();
+    public static void main(String[] args) throws InterruptedException {
+        Map map = MapGenerator.builder().withHeight(60).withWidth(60).generateV2();
         map.displayMap();
-        System.out.println(map.getIslands().get(0).size());
+        System.out.println("Appuyez sur Entrée pour continuer...");
+        Scanner scanner = new Scanner(System.in);
+        scanner.nextLine(); // Attend que l'utilisateur appuie sur Entrée
+        System.out.println("Continuer...");
+        scanner.close();
     }
 }

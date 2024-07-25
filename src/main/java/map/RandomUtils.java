@@ -11,4 +11,8 @@ public class RandomUtils {
     public static int random(int max){
         return (int) random.nextInt(max);
     }
+    public static int random(int max, int min){
+        return (int) random.nextInt(max-min) + min;
+    }
+
 }

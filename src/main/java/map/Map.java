@@ -1,7 +1,10 @@
 package map;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.stream.Collectors;
 
 public class Map {
     private long height;
@@ -21,26 +24,23 @@ public class Map {
     }
 
 
-    public Tile[][] getMap() {
-        return map;
-    }
-
     public void displayMap(){
-        for(int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                this.map[x][y].display();
+        for(int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                this.map[y][x].display();
             }
             System.out.println();
         }
     }
     void init(){
-        for(int x = 0; x < width; x++){
-            for(int y = 0; y < width; y++){
-                map[x][y]= new Tile((long) x,(long) y, true, null);
+        for(int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                map[y][x]= new Tile((long) x,(long) y, true, null);
             }
         }
     }
 
+    //
     public Tile getNorth(int x, int y){
         return getTile(x, y-1);
     }
@@ -70,67 +70,35 @@ public class Map {
     }
 
     public Tile getTile(int x, int y){
-        if(x < 0 || x >= width || y< 0 || y>= height ){
+        if(x < 1 || x >= width-1 || y< 1 || y>= height-1 ){
             return null;
         }
-        return map[x][y];
+        return map[y][x];
     }
 
     Tile transformTileToGround(int x, int y, int index){
-        this.map[x][y] = new Tile(x,y, false, index);
+        this.map[y][x] = new Tile(x,y, false, index);
         return this.getTile(x,y);
     }
 
-    List<Tile> getAllTileNear(int x,int y){
+    List<Tile> getAllTilesSeaNear(Tile tile){
         List<Tile> tiles = new ArrayList<>();
-        addIfNotNull(getNorth(x,y), tiles);
-        addIfNotNull(getNorthWest(x,y), tiles);
-        addIfNotNull(getWest(x,y), tiles);
-        addIfNotNull(getSouthWest(x,y), tiles);
-        addIfNotNull(getSouth(x,y), tiles);
-        addIfNotNull(getSouthEast(x,y), tiles);
-        addIfNotNull(getEast(x,y), tiles);
-        addIfNotNull(getNorthEast(x,y), tiles);
+        addIfSea(getNorth(tile.getX(),tile.getY()), tiles);
+        addIfSea(getNorthWest(tile.getX(),tile.getY()), tiles);
+        addIfSea(getWest(tile.getX(),tile.getY()), tiles);
+        addIfSea(getSouthWest(tile.getX(),tile.getY()), tiles);
+        addIfSea(getSouth(tile.getX(),tile.getY()), tiles);
+        addIfSea(getSouthEast(tile.getX(),tile.getY()), tiles);
+        addIfSea(getEast(tile.getX(),tile.getY()), tiles);
+        addIfSea(getNorthEast(tile.getX(),tile.getY()), tiles);
         return tiles;
     }
-    List<Tile> getAllTileNearWithoutNullAndSea(Tile tile){
-        List<Tile> tiles = new ArrayList<>();
-        addIfNotNullAndNotSea(getNorth(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getNorthWest(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getWest(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getSouthWest(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getSouth(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getSouthEast(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getEast(tile.getX(),tile.getY()), tiles);
-        addIfNotNullAndNotSea(getNorthEast(tile.getX(),tile.getY()), tiles);
-        return tiles;
-    }
-
-    Tile[] getAllTileNearArray(int x,int y){
-        Tile[] tiles = new Tile[8];
-        tiles[0]=getNorth(x,y);
-        tiles[1]=getNorthWest(x,y);
-        tiles[2]=getWest(x,y);
-        tiles[3]=getSouthWest(x,y);
-        tiles[4]=getSouth(x,y);
-        tiles[5]=getSouthEast(x,y);
-        tiles[6]=getEast(x,y);
-        tiles[7]=getNorthEast(x,y);
-        return tiles;
-    }
-
 
     boolean isTooCloseToIslands(Tile tile){
         return this.islands.stream().anyMatch(island -> !island.isTileSeparated(tile));
     }
 
-    private void addIfNotNull(Tile tile, List<Tile> tiles){
-        if(tile == null){
-            return;
-        }
-        tiles.add(tile);
-    }
-    private void addIfNotNullAndNotSea(Tile tile, List<Tile> tiles){
+    private void addIfSea(Tile tile, List<Tile> tiles){
         if(tile == null || !tile.isBlock()){
             return;
         }
@@ -141,7 +109,56 @@ public class Map {
         this.islands.add(island);
     }
 
-    public List<Island> getIslands() {
-        return islands;
+    public Tile transformArea(Island island, int index, int height, int width, int originX, int originY, int value){
+        switch (value){
+            case 1:
+                for (int x = originX; x < originX + width; x ++){
+                    for (int y = originY; y < originY + height; y ++){
+                        addGround(island, index, x, y);
+                    }
+                }
+                break;
+            case 2:
+                for (int x = originX; x > originX - width; x --){
+                    for (int y = originY; y < originY + height; y ++){
+                        addGround(island, index, x, y);
+                    }
+                }
+                break;
+            case 3:
+                for (int x = originX; x < originX + width; x ++){
+                    for (int y = originY; y > originY - height; y --){
+                        addGround(island, index, x, y);
+                    }
+                }
+                break;
+            case 4:
+                for (int x = originX; x > originX - width; x--){
+                    for (int y = originY; y > originY - height; y--){
+                        addGround(island, index, x, y);
+                    }
+                }
+                break;
+        }
+        for (int x = originX; x < originX + width; x ++){
+            for (int y = originY; y < originY + height; y ++){
+                addGround(island, index, x, y);
+            }
+        }
+        List<Tile> tiles = getBordures(island);
+        return tiles.get(RandomUtils.random(tiles.size()));
+    }
+
+    private void addGround(Island island, int index, int x, int y) {
+        Tile tile = this.getTile(x, y);
+        if(tile == null || tile.hasAlreadyIsland()){
+            return;
+        }
+        Tile t = transformTileToGround(x, y, index);
+        island.add(t);
+    }
+
+    public List<Tile> getBordures(Island island){
+        return island.stream().filter(t -> !this.getAllTilesSeaNear(t).isEmpty()).collect(Collectors.toList());
     }
 }

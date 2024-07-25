@@ -1,7 +1,5 @@
 package map;
 
-import java.util.List;
-
 public class MapGenerator {
 
     private int height, width;
@@ -20,50 +18,46 @@ public class MapGenerator {
         return this;
     }
 
-    public Map generate() {
+
+    public Map generateV2() throws InterruptedException {
         Map map = new Map(height, width);
-        int numberOfIslands = Config.NUMBEROFISLAND;
-        int index = 0;
-        while (numberOfIslands != 0) {
-            generateIsland(map, index);
-            index++;
-            numberOfIslands--;
-        }
+        //int numberOfIslands = Config.NUMBEROFISLAND;
+        generateIslandV2(map, 1);
+        generateIslandV2(map, 2);
+        generateIslandV2(map, 3);
+        generateIslandV2(map, 4);
         return map;
+
     }
 
-    private void generateIsland(Map map, int index) {
+    private void generateIslandV2(Map map, int index) throws InterruptedException {
         Island island = new Island();
         Tile tile;
         do {
-            int randomY = RandomUtils.random(height);
-            int randomX = RandomUtils.random(width);
-            tile = map.getTile(randomX, randomY);
-        } while (map.isTooCloseToIslands(tile));
+            int y = RandomUtils.random(height - 10, 10);
+            int x = RandomUtils.random(width - 10, 10);
+            tile = map.getTile(x, y);
+        }while (map.isTooCloseToIslands(tile));
 
-        // Start transforming tiles to create an island
-        transformTile(map, island, tile, index);
+        while (tile != null){
+            tile = addArea(map, island, tile, index);
+//            map.displayMap();
+//            Thread.sleep(1000);
+//            System.out.print("\033[H\033[2J");
+//            System.out.flush();
+        }
         map.addIsland(island);
+
+    }
+    private Tile addArea(Map map, Island island, Tile tile, int index){
+        if(island.size() >= Config.NUMBEROFCASEFORISLAND){
+            return null;
+        }
+        int width = RandomUtils.random(10, 5);
+        int height = RandomUtils.random(10, 5);
+        int originX = tile.getX();
+        int originY = tile.getY();
+        return map.transformArea(island, index, height,width,originX, originY, RandomUtils.random(4,1));
     }
 
-    private void transformTile(Map map, Island island, Tile origin, int index) {
-        if (island.size() >= Config.NUMBEROFCASEFORISLAND) {
-            return;
-        }
-
-        Tile tileChosen;
-        origin = map.transformTileToGround(origin.getX(), origin.getY(), index);
-        island.add(origin);
-
-        List<Tile> tiles = map.getAllTileNearWithoutNullAndSea(origin);
-        while (!tiles.isEmpty()) {
-            int indexChoose = RandomUtils.random(tiles.size());
-            tileChosen = tiles.get(indexChoose);
-            tiles.remove(indexChoose);
-
-            if (!map.isTooCloseToIslands(tileChosen)) {
-                transformTile(map, island, tileChosen, index);
-            }
-        }
-    }
 }

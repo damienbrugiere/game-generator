@@ -17,3 +17,29 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.jar {
+    manifest {
+        attributes(
+                "Main-Class" to "Main" // Remplacez par votre classe principale
+        )
+    }
+    from({
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    })
+}
+
+// Tâche fatJar pour créer un JAR exécutable avec toutes les dépendances (facultatif)
+val fatJar = task("fatJar", type = Jar::class) {
+    manifest {
+        attributes["Main-Class"] = "Main" // Remplacez par votre classe principale
+    }
+    from({
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    })
+    with(tasks.jar.get() as CopySpec)
+}
+
+tasks.build {
+    dependsOn(fatJar)
+}

@@ -30,12 +30,20 @@ public class Tile {
         this.island = island;
     }
 
+    public void setBlock(boolean block) {
+        this.block = block;
+    }
+
     public void display(){
         if (block) {
             System.out.print("M");
         } else {
             System.out.print(island);
         }
+    }
+
+    boolean hasAlreadyIsland(){
+        return this.island != null;
     }
 
     @Override
@@ -49,5 +57,9 @@ public class Tile {
     @Override
     public int hashCode() {
         return Objects.hash(x, y, block, island);
+    }
+
+    public Integer getIsland() {
+        return island;
     }
 }
