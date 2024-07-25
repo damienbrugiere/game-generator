@@ -1,9 +1,7 @@
 package map;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.stream.Collectors;
 
 public class Map {
@@ -69,10 +67,17 @@ public class Map {
        return getTile(x-1,y-1);
     }
 
-    public Tile getTile(int x, int y){
+    Tile getTileWithRules(int x, int y, int distanceBetween){
         if(x < 1 || x >= width-1 || y< 1 || y>= height-1 ){
             return null;
         }
+        Tile t = this.getTile(x,y);
+        if(this.isTooCloseToIslands(t, distanceBetween)){
+            return null;
+        }
+        return t;
+    }
+    public Tile getTile(int x, int y){
         return map[y][x];
     }
 
@@ -94,8 +99,8 @@ public class Map {
         return tiles;
     }
 
-    boolean isTooCloseToIslands(Tile tile){
-        return this.islands.stream().anyMatch(island -> !island.isTileSeparated(tile));
+    boolean isTooCloseToIslands(Tile tile,int distanceBeetwenIsland){
+        return this.islands.stream().anyMatch(island -> !island.isTileSeparated(tile, distanceBeetwenIsland));
     }
 
     private void addIfSea(Tile tile, List<Tile> tiles){
@@ -109,48 +114,48 @@ public class Map {
         this.islands.add(island);
     }
 
-    public Tile transformArea(Island island, int index, int height, int width, int originX, int originY, int value){
+    public Tile transformArea(Island island, int index, int height, int width, int originX, int originY, int value, int distanceBeetwenIsland){
         switch (value){
             case 1:
                 for (int x = originX; x < originX + width; x ++){
                     for (int y = originY; y < originY + height; y ++){
-                        addGround(island, index, x, y);
+                        addGround(island, index, x, y,distanceBeetwenIsland);
                     }
                 }
                 break;
             case 2:
                 for (int x = originX; x > originX - width; x --){
                     for (int y = originY; y < originY + height; y ++){
-                        addGround(island, index, x, y);
+                        addGround(island, index, x, y, distanceBeetwenIsland);
                     }
                 }
                 break;
             case 3:
                 for (int x = originX; x < originX + width; x ++){
                     for (int y = originY; y > originY - height; y --){
-                        addGround(island, index, x, y);
+                        addGround(island, index, x, y, distanceBeetwenIsland);
                     }
                 }
                 break;
             case 4:
                 for (int x = originX; x > originX - width; x--){
                     for (int y = originY; y > originY - height; y--){
-                        addGround(island, index, x, y);
+                        addGround(island, index, x, y,distanceBeetwenIsland);
                     }
                 }
                 break;
         }
         for (int x = originX; x < originX + width; x ++){
             for (int y = originY; y < originY + height; y ++){
-                addGround(island, index, x, y);
+                addGround(island, index, x, y,distanceBeetwenIsland);
             }
         }
         List<Tile> tiles = getBordures(island);
         return tiles.get(RandomUtils.random(tiles.size()));
     }
 
-    private void addGround(Island island, int index, int x, int y) {
-        Tile tile = this.getTile(x, y);
+    private void addGround(Island island, int index, int x, int y, int distanceBeetwenIsland) {
+        Tile tile = this.getTileWithRules(x, y, distanceBeetwenIsland);
         if(tile == null || tile.hasAlreadyIsland()){
             return;
         }

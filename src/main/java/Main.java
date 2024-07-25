@@ -6,7 +6,8 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
-        Map map = MapGenerator.builder().withHeight(60).withWidth(60).generateV2();
+        Map map = MapGenerator.builder()
+                .generateV2();
         map.displayMap();
         System.out.println("Appuyez sur Entrée pour continuer...");
         Scanner scanner = new Scanner(System.in);
